@@ -18,7 +18,7 @@ namespace NetMeter
 
         public async Task<object> GetAdapterNames(object o)
         {
-            return await Task.Run(() => JsonConvert.SerializeObject(GetNames());
+            return await Task.Run(() => JsonConvert.SerializeObject(GetNames()));
         }
 
         public async Task<object> Start(object o)
@@ -33,7 +33,32 @@ namespace NetMeter
 
         public async Task<object> GetDownloadSpeed(object o)
         {
+            return await Task.Run(() => adapter.DownloadSpeedFormatted);
+        }
+
+        public async Task<object> GetUploadSpeed(object o)
+        {
+            return await Task.Run(() => adapter.UploadSpeedFormatted);
+        }
+
+        public async Task<object> GetDownloadSpeedMbps(object o)
+        {
             return await Task.Run(() => adapter.DownloadSpeedMbps);
+        }
+
+        public async Task<object> GetUploadSpeedMbps(object o)
+        {
+            return await Task.Run(() => adapter.UploadSpeedMbps);
+        }
+
+        public async Task<object> GetDownloadSpeedKbps(object o)
+        {
+            return await Task.Run(() => adapter.DownloadSpeedKbps);
+        }
+
+        public async Task<object> GetUploadSpeedKbps(object e)
+        {
+            return await Task.Run(() => adapter.UploadSpeedKbps);
         }
 
         private bool InitAdapter(string name)
