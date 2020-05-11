@@ -19,6 +19,12 @@ namespace NetMeter
             return await Task.Run(() => InitAdapter(name));
         }
 
+        public async Task<object> Remove(object o)
+        {
+            string name = (string)o;
+            return await Task.Run(() => RemoveAdapter(name));
+        }
+
         public async Task<object> GetAdapterNames(object o)
         {
             return await Task.Run(() => JsonConvert.SerializeObject(GetNames()));
@@ -32,48 +38,80 @@ namespace NetMeter
         public async Task<object> Start(object o)
         {
             string name = (string)o;
+            if (!monitors.ContainsKey(name))
+            {
+                return false;
+            }
             return await Task.Run(() => StartMonitor(name));
         }
 
         public async Task<object> Stop(object o)
         {
             string name = (string)o;
+            if (!monitors.ContainsKey(name))
+            {
+                return false;
+            }
             return await Task.Run(() => StopMonitor(name));
         }
 
         public async Task<object> GetDownloadSpeed(object o)
         {
             string name = (string)o;
+            if (!adapters.ContainsKey(name))
+            {
+                return "Error";
+            }
             return await Task.Run(() => adapters[name].DownloadSpeedFormatted);
         }
 
         public async Task<object> GetUploadSpeed(object o)
         {
             string name = (string)o;
+            if (!adapters.ContainsKey(name))
+            {
+                return "Error";
+            }
             return await Task.Run(() => adapters[name].UploadSpeedFormatted);
         }
 
         public async Task<object> GetDownloadSpeedMbps(object o)
         {
             string name = (string)o;
+            if (!adapters.ContainsKey(name))
+            {
+                return "Error";
+            }
             return await Task.Run(() => adapters[name].DownloadSpeedMbps);
         }
 
         public async Task<object> GetUploadSpeedMbps(object o)
         {
             string name = (string)o;
+            if (!adapters.ContainsKey(name))
+            {
+                return "Error";
+            }
             return await Task.Run(() => adapters[name].UploadSpeedMbps);
         }
 
         public async Task<object> GetDownloadSpeedKbps(object o)
         {
             string name = (string)o;
+            if (!adapters.ContainsKey(name))
+            {
+                return "Error";
+            }
             return await Task.Run(() => adapters[name].DownloadSpeedKbps);
         }
 
         public async Task<object> GetUploadSpeedKbps(object o)
         {
             string name = (string)o;
+            if (!adapters.ContainsKey(name))
+            {
+                return "Error";
+            }
             return await Task.Run(() => adapters[name].UploadSpeedKbps);
         }
 
@@ -85,6 +123,20 @@ namespace NetMeter
             // Push into dictonary
             adapters.Add(name, adapter);
             monitors.Add(name, monitor);
+            return true;
+        }
+
+        private bool RemoveAdapter(string name)
+        {
+            if (monitors.ContainsKey(name))
+            {
+                monitors[name].Stop();
+                monitors.Remove(name);
+            }
+            if (adapters.ContainsKey(name))
+            {
+                adapters.Remove(name);
+            }
             return true;
         }
 
