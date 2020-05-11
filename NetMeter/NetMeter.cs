@@ -1,14 +1,17 @@
 ﻿using Newtonsoft.Json;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Management;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace NetMeter
 {
     public class NetMeter
     {
-        private NetworkAdapter adapter;
-        private SpeedMonitor monitor;
+        private static Dictionary<string, NetworkAdapter> adapters = new Dictionary<string, NetworkAdapter>();
+        private static Dictionary<string, SpeedMonitor> monitors = new Dictionary<string, SpeedMonitor>();
 
         public async Task<object> Init(object o)
         {
@@ -21,51 +24,67 @@ namespace NetMeter
             return await Task.Run(() => JsonConvert.SerializeObject(GetNames()));
         }
 
+        public async Task<object> GetActivatedAdapter(object o)
+        {
+            return await Task.Run(() => JsonConvert.SerializeObject(GetActivatedAdapterName()));
+        }
+
         public async Task<object> Start(object o)
         {
-            return await Task.Run(() => StartMonitor());
+            string name = (string)o;
+            return await Task.Run(() => StartMonitor(name));
         }
 
         public async Task<object> Stop(object o)
         {
-            return await Task.Run(() => StopMonitor());
+            string name = (string)o;
+            return await Task.Run(() => StopMonitor(name));
         }
 
         public async Task<object> GetDownloadSpeed(object o)
         {
-            return await Task.Run(() => adapter.DownloadSpeedFormatted);
+            string name = (string)o;
+            return await Task.Run(() => adapters[name].DownloadSpeedFormatted);
         }
 
         public async Task<object> GetUploadSpeed(object o)
         {
-            return await Task.Run(() => adapter.UploadSpeedFormatted);
+            string name = (string)o;
+            return await Task.Run(() => adapters[name].UploadSpeedFormatted);
         }
 
         public async Task<object> GetDownloadSpeedMbps(object o)
         {
-            return await Task.Run(() => adapter.DownloadSpeedMbps);
+            string name = (string)o;
+            return await Task.Run(() => adapters[name].DownloadSpeedMbps);
         }
 
         public async Task<object> GetUploadSpeedMbps(object o)
         {
-            return await Task.Run(() => adapter.UploadSpeedMbps);
+            string name = (string)o;
+            return await Task.Run(() => adapters[name].UploadSpeedMbps);
         }
 
         public async Task<object> GetDownloadSpeedKbps(object o)
         {
-            return await Task.Run(() => adapter.DownloadSpeedKbps);
+            string name = (string)o;
+            return await Task.Run(() => adapters[name].DownloadSpeedKbps);
         }
 
-        public async Task<object> GetUploadSpeedKbps(object e)
+        public async Task<object> GetUploadSpeedKbps(object o)
         {
-            return await Task.Run(() => adapter.UploadSpeedKbps);
+            string name = (string)o;
+            return await Task.Run(() => adapters[name].UploadSpeedKbps);
         }
 
         private bool InitAdapter(string name)
         {
-            adapter = new NetworkAdapter(name);
-            monitor = new SpeedMonitor(adapter);
+            NetworkAdapter adapter = new NetworkAdapter(name);
+            SpeedMonitor monitor = new SpeedMonitor(adapter);
             monitor.Start();
+            // Push into dictonary
+            adapters.Add(name, adapter);
+            monitors.Add(name, monitor);
             return true;
         }
 
@@ -80,15 +99,29 @@ namespace NetMeter
             return adapters;
         }
 
-        private bool StartMonitor()
+        public string GetActivatedAdapterName()
         {
-            monitor.Start();
+            ManagementClass mc = new ManagementClass("Win32_NetworkAdapterConfiguration");
+            ManagementObjectCollection moc = mc.GetInstances();
+            foreach (ManagementObject mo in moc)
+            {
+                if (mo["IPEnabled"].ToString() == "True")
+                {
+                    return mo["Caption"].ToString();
+                }
+            }
+            return null;
+        }
+
+        private bool StartMonitor(string name)
+        {
+            monitors[name].Start();
             return true;
         }
 
-        private bool StopMonitor()
+        private bool StopMonitor(string name)
         {
-            monitor.Stop();
+            monitors[name].Stop();
             return true;
         }
     }

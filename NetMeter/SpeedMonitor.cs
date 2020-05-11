@@ -24,6 +24,7 @@ namespace NetMeter
 
         public void Start()
         {
+            adapter.Init();
             timer.Enabled = true;
         }
 
